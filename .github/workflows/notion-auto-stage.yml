@@ -2,8 +2,8 @@ name: Notion Auto Stage Manager
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
-  workflow_dispatch:
+    - cron: '*/10 * * * *'  # Каждые 10 минут
+  workflow_dispatch:  # Ручной запуск
 
 jobs:
   update-stages:
@@ -18,8 +18,7 @@ jobs:
       run: |
         pip install notion-client==2.2.0
         pip install python-dotenv==1.0.0
-        pip install schedule==1.2.0
     - name: Run auto stage manager
       env:
-        NOTION_TOKEN: ${{ vars.NOTION_TOKEN }}  # Используем переменную вместо секрета
+        NOTION_TOKEN: ${{ vars.NOTION_TOKEN }}
       run: python notion_auto_stage.py
