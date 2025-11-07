@@ -98,7 +98,7 @@ class NotionStageAutomation:
                 current_stage_name = f"Этап {current_index + 1}"
             
             try:
-                next_stage_name = next_stage['properties']['Name']['title'][0]['text']['content']
+                next_stage_name = next_stage['properties']['Название']['title'][0]['text']['content']
             except:
                 next_stage_name = f"Этап {current_index + 2}"
             
