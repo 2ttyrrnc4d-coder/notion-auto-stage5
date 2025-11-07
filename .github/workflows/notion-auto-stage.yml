@@ -1,0 +1,25 @@
+name: Notion Auto Stage Manager
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update-stages:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        pip install notion-client==2.2.0
+        pip install python-dotenv==1.0.0
+        pip install schedule==1.2.0
+    - name: Run auto stage manager
+      env:
+        NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}  # Токен из секретов
+      run: python notion_auto_stage.py
