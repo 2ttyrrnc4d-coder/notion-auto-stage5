@@ -91,7 +91,7 @@ class NotionStageAutomation:
             try:
                 self.notion.pages.update(
                     page_id=project_id,
-                    properties={'Статус проекта': {'select': {'name': '🏁 Завершен!'}}}
+                    properties={'Статус проекта': {'select': {'name': '🏁 ЗАВЕРШЁН!'}}}
                 )
                 print("   ✅ Статус проекта обновлен: 🏁 Завершен")
             except:
