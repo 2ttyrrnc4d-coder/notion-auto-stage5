@@ -97,57 +97,57 @@ class NotionStageAutomation:
         return True
     
     def check_all_projects(self):
-    """Проверить все проекты и обновить этапы"""
-    print(f"🔍 Проверка проектов... {time.strftime('%H:%M:%S')}")
-    
-    try:
-        projects = self.notion.databases.query(
-            database_id=self.projects_db
-        ).get("results", [])
+        """Проверить все проекты и обновить этапы"""
+        print(f"🔍 Проверка проектов... {time.strftime('%H:%M:%S')}")
         
-        print(f"📁 Найдено проектов: {len(projects)}")
-        
-        for project in projects:
-            try:
-                # Безопасное получение названия проекта
+        try:
+            projects = self.notion.databases.query(
+                database_id=self.projects_db
+            ).get("results", [])
+            
+            print(f"📁 Найдено проектов: {len(projects)}")
+            
+            for project in projects:
                 try:
-                    project_name = project['properties']['Название']['title'][0]['text']['content']
-                except (KeyError, IndexError, TypeError):
-                    project_name = f"Project_{project['id'][-8:]}"
-                
-                print(f"🔍 Проверяю проект: {project_name}")
-                
-                current_stage_id = self.get_current_stage(project)
-                
-                if not current_stage_id:
-                    print(f"   ⏭️ Нет текущего этапа")
-                    continue
-                
-                # Получаем все этапы проекта
-                all_stages = self.get_project_stages(project['id'])
-                print(f"   📋 Этапов у проекта: {len(all_stages)}")
-                
-                # Проверяем завершенность текущего этапа
-                if self.is_stage_completed(current_stage_id):
-                    print(f"   ✅ Этап завершен - выполняю переход")
-                    success = self.advance_project_stage(project['id'], current_stage_id, all_stages)
-                    if success:
-                        print(f"   🔄 Успешно переключил этап")
+                    # Безопасное получение названия проекта
+                    try:
+                        project_name = project['properties']['Название']['title'][0]['text']['content']
+                    except (KeyError, IndexError, TypeError):
+                        project_name = f"Project_{project['id'][-8:]}"
+                    
+                    print(f"🔍 Проверяю проект: {project_name}")
+                    
+                    current_stage_id = self.get_current_stage(project)
+                    
+                    if not current_stage_id:
+                        print(f"   ⏭️ Нет текущего этапа")
+                        continue
+                    
+                    # Получаем все этапы проекта
+                    all_stages = self.get_project_stages(project['id'])
+                    print(f"   📋 Этапов у проекта: {len(all_stages)}")
+                    
+                    # Проверяем завершенность текущего этапа
+                    if self.is_stage_completed(current_stage_id):
+                        print(f"   ✅ Этап завершен - выполняю переход")
+                        success = self.advance_project_stage(project['id'], current_stage_id, all_stages)
+                        if success:
+                            print(f"   🔄 Успешно переключил этап")
+                        else:
+                            print(f"   ⏹️  Нет следующего этапа для перехода")
                     else:
-                        print(f"   ⏹️  Нет следующего этапа для перехода")
-                else:
-                    # Считаем прогресс для логов
-                    tasks = self.get_stage_tasks(current_stage_id)
-                    completed = sum(1 for task in tasks 
-                                  if task['properties']['Выполнена']['checkbox'])
-                    total = len(tasks)
-                    print(f"   📊 Прогресс: {completed}/{total} задач")
-                        
-            except Exception as e:
-                print(f"❌ Ошибка в проекте {project.get('id', 'unknown')}: {str(e)}")
-    
-    except Exception as e:
-        print(f"💥 Критическая ошибка при запросе проектов: {str(e)}")
+                        # Считаем прогресс для логов
+                        tasks = self.get_stage_tasks(current_stage_id)
+                        completed = sum(1 for task in tasks 
+                                      if task['properties']['Выполнена']['checkbox'])
+                        total = len(tasks)
+                        print(f"   📊 Прогресс: {completed}/{total} задач")
+                            
+                except Exception as e:
+                    print(f"❌ Ошибка в проекте {project.get('id', 'unknown')}: {str(e)}")
+        
+        except Exception as e:
+            print(f"💥 Критическая ошибка при запросе проектов: {str(e)}")
     
     def run_once(self):
         """Запустить одну проверку"""
