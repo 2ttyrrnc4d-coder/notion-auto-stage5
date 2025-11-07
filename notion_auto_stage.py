@@ -30,7 +30,7 @@ class NotionStageAutomation:
             )
             return stages.get("results", [])
         except Exception as e:
-            print(f"❌ Error getting project stages: {str(e)}")
+            print(f"❌ Ошибка получения этапов проекта: {str(e)}")
             return []
     
     def get_stage_tasks(self, stage_id):
@@ -45,7 +45,7 @@ class NotionStageAutomation:
             )
             return tasks.get("results", [])
         except Exception as e:
-            print(f"❌ Error getting stage tasks: {str(e)}")
+            print(f"❌ Ошибка получения задач этапа: {str(e)}")
             return []
     
     def is_stage_completed(self, stage_id):
@@ -61,16 +61,7 @@ class NotionStageAutomation:
     def get_current_stage(self, project):
         """Получить текущий активный этап проекта"""
         try:
-            # Пробуем разные возможные названия свойства
-            stage_relation = None
-            
-            if 'Текущий этап' in project['properties']:
-                stage_relation = project['properties']['Текущий этап']['relation']
-            elif 'Current stage' in project['properties']:
-                stage_relation = project['properties']['Current stage']['relation']
-            elif 'Stage' in project['properties']:
-                stage_relation = project['properties']['Stage']['relation']
-            
+            stage_relation = project['properties']['Текущий этап']['relation']
             return stage_relation[0]['id'] if stage_relation and len(stage_relation) > 0 else None
         except Exception as e:
             print(f"   ⚠️ Ошибка получения текущего этапа: {str(e)}")
@@ -93,14 +84,20 @@ class NotionStageAutomation:
             
             # Безопасное получение названий этапов
             try:
-                current_stage_name = all_stages[current_index]['properties']['Название']['title'][0]['text']['content']
+                current_stage_name = all_stages[current_index]['properties']['Название']['title'][0]['plain_text']
             except:
-                current_stage_name = f"Этап {current_index + 1}"
+                try:
+                    current_stage_name = all_stages[current_index]['properties']['Название']['title'][0]['text']['content']
+                except:
+                    current_stage_name = f"Этап {current_index + 1}"
             
             try:
-                next_stage_name = next_stage['properties']['Название']['title'][0]['text']['content']
+                next_stage_name = next_stage['properties']['Название']['title'][0]['plain_text']
             except:
-                next_stage_name = f"Этап {current_index + 2}"
+                try:
+                    next_stage_name = next_stage['properties']['Название']['title'][0]['text']['content']
+                except:
+                    next_stage_name = f"Этап {current_index + 2}"
             
             print(f"   🔄 Переход с '{current_stage_name}' на '{next_stage_name}'")
             
@@ -147,9 +144,15 @@ class NotionStageAutomation:
                 try:
                     # Безопасное получение названия проекта
                     try:
-                        project_name = project['properties']['Название']['title'][0]['text']['content']
-                    except (KeyError, IndexError, TypeError):
-                        project_name = f"Project_{project['id'][-8:]}"
+                        project_name = project['properties']['Название']['title'][0]['plain_text']
+                    except:
+                        try:
+                            project_name = project['properties']['Название']['title'][0]['text']['content']
+                        except (KeyError, IndexError, TypeError):
+                            # Если все еще не получается, покажем все доступные свойства для отладки
+                            available_props = list(project['properties'].keys())
+                            print(f"   🔍 Доступные свойства: {available_props}")
+                            project_name = f"Project_{project['id'][-8:]}"
                     
                     print(f"🔍 Проверяю проект: {project_name}")
                     
@@ -170,9 +173,12 @@ class NotionStageAutomation:
                         if stage['id'] == current_stage_id:
                             current_stage_index = i + 1  # +1 чтобы считать с 1, а не с 0
                             try:
-                                current_stage_name = stage['properties']['Название']['title'][0]['text']['content']
+                                current_stage_name = stage['properties']['Название']['title'][0]['plain_text']
                             except:
-                                current_stage_name = f"Этап {current_stage_index}"
+                                try:
+                                    current_stage_name = stage['properties']['Название']['title'][0]['text']['content']
+                                except:
+                                    current_stage_name = f"Этап {current_stage_index}"
                             break
                     
                     print(f"   🎯 Текущий этап: {current_stage_index}/{len(all_stages)} - {current_stage_name}")
@@ -223,5 +229,5 @@ if __name__ == "__main__":
         automation = NotionStageAutomation()
         automation.run_once()
     except Exception as e:
-        print(f"💥 Critical error: {str(e)}")
+        print(f"💥 Критическая ошибка: {str(e)}")
         exit(1)
