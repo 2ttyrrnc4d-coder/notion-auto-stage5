@@ -75,10 +75,8 @@ class NotionStageAutomation:
             return None
     
     def mark_project_completed(self, project_id, all_stages):
-        """Пометить проект как завершенный"""
+        """Пометить проект как завершенный в Notion"""
         try:
-            # Обновляем статус проекта (если есть такое свойство)
-            # Можно добавить свойство "Статус проекта" в базу проектов
             print("   🏁 Все этапы завершены! Проект выполнен!")
             
             # Помечаем последний этап как завершенный
@@ -88,11 +86,38 @@ class NotionStageAutomation:
                 properties={'Статус': {'select': {'name': 'Завершен'}}}
             )
             
-            # Можно добавить кастомное свойство для проекта "Статус"
-            # self.notion.pages.update(
-            #     page_id=project_id,
-            #     properties={'Статус проекта': {'select': {'name': 'Завершен'}}}
-            # )
+            # Обновляем статус проекта в Notion
+            # Сначала пробуем обновить свойство "Статус проекта", если оно есть
+            try:
+                self.notion.pages.update(
+                    page_id=project_id,
+                    properties={'Статус проекта': {'select': {'name': '🏁 Завершен'}}}
+                )
+                print("   ✅ Статус проекта обновлен: 🏁 Завершен")
+            except:
+                # Если свойства "Статус проекта" нет, создаем свойство "Название" с эмодзи
+                try:
+                    project_data = self.notion.pages.retrieve(project_id)
+                    current_name = project_data['properties']['Название']['title'][0]['text']['content']
+                    new_name = f"{current_name} 🏁"
+                    
+                    self.notion.pages.update(
+                        page_id=project_id,
+                        properties={
+                            'Название': {
+                                'title': [
+                                    {
+                                        'text': {
+                                            'content': new_name
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    )
+                    print(f"   ✅ Название проекта обновлено: {new_name}")
+                except Exception as e:
+                    print(f"   ⚠️ Не удалось обновить статус проекта: {str(e)}")
             
             return True
             
@@ -201,7 +226,7 @@ class NotionStageAutomation:
                     current_stage_name = "Неизвестно"
                     for i, stage in enumerate(all_stages):
                         if stage['id'] == current_stage_id:
-                            current_stage_index = i + 1  # +1 чтобы считать с 1, а не с 0
+                            current_stage_index = i + 1
                             try:
                                 current_stage_name = stage['properties']['Название']['title'][0]['plain_text']
                             except:
@@ -236,7 +261,7 @@ class NotionStageAutomation:
                         print(f"   🎉 ВСЕ ЭТАПЫ ПРОЕКТА ЗАВЕРШЕНЫ!")
                         self.mark_project_completed(project['id'], all_stages)
                     
-                    # Проверяем завершенность текущего этапа
+                    # Проверяем завершенность текущего этапа (только если не все этапы завершены)
                     elif self.is_stage_completed(current_stage_id):
                         print(f"   ✅ Этап завершен - выполняю переход")
                         success = self.advance_project_stage(project['id'], current_stage_id, all_stages)
