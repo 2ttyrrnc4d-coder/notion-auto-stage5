@@ -8,7 +8,15 @@ load_dotenv()
 
 class NotionStageAutomation:
     def __init__(self):
-        self.notion = Client(auth="NOTION_TOKEN")
+        # ✅ ПРАВИЛЬНО: получаем токен из переменных окружения
+        notion_token = os.environ.get('NOTION_TOKEN')
+        
+        if not notion_token:
+            raise Exception("NOTION_TOKEN not found in environment variables")
+        
+        print(f"🔑 Token found: {notion_token[:10]}...")
+        
+        self.notion = Client(auth=notion_token)  # ← ИСПРАВЛЕНО!
         self.projects_db = "2334aa74d3bd81dd8e87d07e18195649"
         self.stages_db = "2344aa74d3bd80958c46cd097c3f1559"
         self.tasks_db = "2334aa74d3bd81589439ed4116e01fbb"
