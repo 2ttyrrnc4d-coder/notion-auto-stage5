@@ -93,7 +93,7 @@ class NotionStageAutomation:
             
             # Безопасное получение названий этапов
             try:
-                current_stage_name = all_stages[current_index]['properties']['Name']['title'][0]['text']['content']
+                current_stage_name = all_stages[current_index]['properties']['Название']['title'][0]['text']['content']
             except:
                 current_stage_name = f"Этап {current_index + 1}"
             
@@ -147,7 +147,7 @@ class NotionStageAutomation:
                 try:
                     # Безопасное получение названия проекта
                     try:
-                        project_name = project['properties']['Name']['title'][0]['text']['content']
+                        project_name = project['properties']['Название']['title'][0]['text']['content']
                     except (KeyError, IndexError, TypeError):
                         project_name = f"Project_{project['id'][-8:]}"
                     
@@ -170,7 +170,7 @@ class NotionStageAutomation:
                         if stage['id'] == current_stage_id:
                             current_stage_index = i + 1  # +1 чтобы считать с 1, а не с 0
                             try:
-                                current_stage_name = stage['properties']['Name']['title'][0]['text']['content']
+                                current_stage_name = stage['properties']['Название']['title'][0]['text']['content']
                             except:
                                 current_stage_name = f"Этап {current_stage_index}"
                             break
