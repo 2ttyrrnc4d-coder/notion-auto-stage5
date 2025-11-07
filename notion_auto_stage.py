@@ -58,6 +58,13 @@ class NotionStageAutomation:
                           if task['properties']['Выполнена']['checkbox']]
         return len(completed_tasks) == len(tasks)
     
+    def are_all_stages_completed(self, all_stages):
+        """Проверить, все ли этапы проекта завершены"""
+        for stage in all_stages:
+            if not self.is_stage_completed(stage['id']):
+                return False
+        return True
+    
     def get_current_stage(self, project):
         """Получить текущий активный этап проекта"""
         try:
@@ -66,6 +73,32 @@ class NotionStageAutomation:
         except Exception as e:
             print(f"   ⚠️ Ошибка получения текущего этапа: {str(e)}")
             return None
+    
+    def mark_project_completed(self, project_id, all_stages):
+        """Пометить проект как завершенный"""
+        try:
+            # Обновляем статус проекта (если есть такое свойство)
+            # Можно добавить свойство "Статус проекта" в базу проектов
+            print("   🏁 Все этапы завершены! Проект выполнен!")
+            
+            # Помечаем последний этап как завершенный
+            last_stage = all_stages[-1]
+            self.notion.pages.update(
+                page_id=last_stage['id'],
+                properties={'Статус': {'select': {'name': 'Завершен'}}}
+            )
+            
+            # Можно добавить кастомное свойство для проекта "Статус"
+            # self.notion.pages.update(
+            #     page_id=project_id,
+            #     properties={'Статус проекта': {'select': {'name': 'Завершен'}}}
+            # )
+            
+            return True
+            
+        except Exception as e:
+            print(f"   ❌ Ошибка при завершении проекта: {str(e)}")
+            return False
     
     def advance_project_stage(self, project_id, current_stage_id, all_stages):
         """Перевести проект на следующий этап на основе порядка"""
@@ -149,9 +182,6 @@ class NotionStageAutomation:
                         try:
                             project_name = project['properties']['Название']['title'][0]['text']['content']
                         except (KeyError, IndexError, TypeError):
-                            # Если все еще не получается, покажем все доступные свойства для отладки
-                            available_props = list(project['properties'].keys())
-                            print(f"   🔍 Доступные свойства: {available_props}")
                             project_name = f"Project_{project['id'][-8:]}"
                     
                     print(f"🔍 Проверяю проект: {project_name}")
@@ -201,8 +231,13 @@ class NotionStageAutomation:
                     print(f"   📊 Прогресс текущего этапа: {current_completed}/{current_total} задач")
                     print(f"   📈 Общий прогресс проекта: {completed_tasks_all_stages}/{total_tasks_all_stages} задач")
                     
+                    # Проверяем завершенность ВСЕХ этапов проекта
+                    if self.are_all_stages_completed(all_stages):
+                        print(f"   🎉 ВСЕ ЭТАПЫ ПРОЕКТА ЗАВЕРШЕНЫ!")
+                        self.mark_project_completed(project['id'], all_stages)
+                    
                     # Проверяем завершенность текущего этапа
-                    if self.is_stage_completed(current_stage_id):
+                    elif self.is_stage_completed(current_stage_id):
                         print(f"   ✅ Этап завершен - выполняю переход")
                         success = self.advance_project_stage(project['id'], current_stage_id, all_stages)
                         if success:
