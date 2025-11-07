@@ -21,5 +21,5 @@ jobs:
         pip install schedule==1.2.0
     - name: Run auto stage manager
       env:
-        NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}  # Токен из секретов
+        NOTION_TOKEN: ${{ vars.NOTION_TOKEN }}  # Используем переменную вместо секрета
       run: python notion_auto_stage.py
